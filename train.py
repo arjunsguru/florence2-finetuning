@@ -33,7 +33,7 @@ train_dataset = DocVQADataset("train")
 val_dataset = DocVQADataset("validation")
 
 # Create DataLoader
-batch_size = 8
+batch_size = 1
 num_workers = 0
 
 train_loader = DataLoader(

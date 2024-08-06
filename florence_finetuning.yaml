@@ -1,0 +1,49 @@
+version: 2
+name: dxis-post-ingestion-arjun-data-drive-ix
+tasks:
+- name: 1.florence-2-finetuning
+  inputs:
+  - url: swift://swiftstack-maglev.ngc.nvidia.com/drive-ix/drive-ix-scratch/aguru/florence2-finetuning
+    prefix: drive-ix-scratch/aguru/florence2-finetuning
+  image: nvcr.io/nv-maglev/dlav/florence-2-finetuning:latest
+  command: bash
+  args:
+  - -c
+  - cd /app && ln -s {{output}} /home/output &&
+    export WANDB_API_KEY=local-ef1b0bcb789788516a6482d3a4252d0966973ab9 &&
+    export WANDB_BASE_URL=https://maglev.wandb.io &&
+    ln -s {{input}} /home/swiftstack &&
+    cd /home/swiftstack/drive-ix-scratch/aguru/florence2-finetuning &&
+    python distributed_train.py --dataset docvqa --epochs 10 --eval-steps 1000
+  group: all
+  workerPool: florence-pool
+workerPools:
+- name: florence-pool
+  workers: 1
+  cpu: "120"
+  gpu: "4"
+  mem: 800Gi
+  disk: 400Gi
+  resourceShare: genpop-pdx
+userEmail: aguru@nvidia.com
+createdAt: "2024-02-12T20:01:31.319Z"
+updatedTime: "2024-02-12T20:01:32.424Z"
+storageSecret: drive-ix-swift-creds
+notifications:
+- starting
+- failed
+- finished
+tags:
+  command: /driveix/data_processing/main.py
+  command_trigger_time: "2023-12-15T19:45:17+00:00"
+  cost-center: av_ndas_drive-ix
+  git_commit_author_email: lbrusatin@nvidia.com
+  git_commit_author_name: Luca Brusatin
+  git_commit_authored_datetime: "2023-11-28T08:32:20-08:00"
+  git_commit_committed_datetime: "2023-11-29T13:23:31-08:00"
+  git_commit_sha: e39c34c83888010f24c966fa2faf72e12a12ce74
+  git_commit_summary: '[Egomotion] VAL Egomotion Population in Node'
+  git_has_uncommitted_changes: "True"
+specHash: 87e9963fd07644ef4f8f80233e44ec18a8c696aec18bfd2a640bbe2b5f8e465c
+retentionPolicy:
+  default: 14d
