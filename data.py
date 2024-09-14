@@ -1,6 +1,7 @@
 import concurrent.futures
 import io
 
+import numpy as np
 import pandas as pd
 from datasets import get_dataset_config_names, load_dataset, load_from_disk
 from PIL import Image
@@ -45,6 +46,10 @@ class DocVQADataset(BaseDataset):
         image = example["image"]  # The image is already a PIL Image object
         if image.mode != "RGB":
             image = image.convert("RGB")
+        img_array = np.array(image)
+        print("question is {} with type {}".format(question, type(question)))
+        print("answers is {} with type {}".format(answers, type(answers)))
+        print("image shape is {} with min {}, max {}, with type {}".format(img_array.shape, np.min(img_array), np.max(img_array), type(img_array)))
         return question, answers, image
     
 class VQAInstructDataset(BaseDataset):

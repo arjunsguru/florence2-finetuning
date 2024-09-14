@@ -1,30 +1,40 @@
 version: 2
-name: dxis-post-ingestion-arjun-data-drive-ix
+name: dxis-post-ingestion-arjun-data-drive-ix-bs2
 tasks:
 - name: 1.florence-2-finetuning
   inputs:
   - url: swift://swiftstack-maglev.ngc.nvidia.com/drive-ix/drive-ix-scratch/aguru/florence2-finetuning
     prefix: drive-ix-scratch/aguru/florence2-finetuning
-  image: nvcr.io/nv-maglev/dlav/florence-2-finetuning:latest
+  - volume:
+      name: train-pbr-aguru
+      version: latest
+    prefix: aguru/train_pbr/
+    storageSecret: drive-ix-swift-creds
+  - volume:
+      name: train-tless-aguru
+      version: latest
+    prefix: aguru/t-less_v2/
+    storageSecret: drive-ix-swift-creds
+  image: nvcr.io/nv-maglev/dlav/florence2-ftune-114:latest
   command: bash
   args:
   - -c
-  - cd /app && ln -s {{output}} /home/output &&
+  - ln -s {{input}} /home/scratch.driveix_50t_3 &&
+    ln -s {{output}} /home/output &&
     export WANDB_API_KEY=local-ef1b0bcb789788516a6482d3a4252d0966973ab9 &&
     export WANDB_BASE_URL=https://maglev.wandb.io &&
-    ln -s {{input}} /home/swiftstack &&
-    cd /home/swiftstack/drive-ix-scratch/aguru/florence2-finetuning &&
-    python distributed_train.py --dataset docvqa --epochs 10 --eval-steps 1000
+    cd {{input}}/drive-ix-scratch/aguru/florence2-finetuning &&
+    python3 distributed_finetune_tless.py --batch-size 2 --epochs 1
   group: all
   workerPool: florence-pool
 workerPools:
 - name: florence-pool
   workers: 1
-  cpu: "120"
-  gpu: "4"
-  mem: 800Gi
-  disk: 400Gi
-  resourceShare: genpop-pdx
+  cpu: "16"
+  gpu: "2"
+  mem: 200Gi
+  disk: 200Gi
+  resourceShare: drive-ix
 userEmail: aguru@nvidia.com
 createdAt: "2024-02-12T20:01:31.319Z"
 updatedTime: "2024-02-12T20:01:32.424Z"

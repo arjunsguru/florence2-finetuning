@@ -1,38 +1,44 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu20.04
+# Start with NVIDIA PyTorch image
+FROM nvcr.io/nvidia/pytorch:22.03-py3
 
-ENV DEBIAN_FRONTEND noninteractive
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    CUDA_HOME=/usr/local/cuda
 
-RUN apt-get update && \
-    apt-get install -y \
-        git \
-        python3-pip \
-        python3-dev \
-        python3-opencv \
-        libglib2.0-0
+# Update GPG keys and install system dependencies
+RUN apt-get update && apt-get install -y gnupg && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    ninja-build \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-RUN python3 -m pip install --upgrade pip
+# Upgrade pip and install Python packages
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir \
+    packaging \
+    tqdm \
+    transformers \
+    einops \
+    pandas \
+    datasets \
+    timm \
+    levenshtein \
+    matplotlib \
+    pycocotools \
+    scikit-image \
+    pypng \
+    friendlywords \
+    wandb
 
-ENV CUDA_HOME=/usr/local/cuda
-ENV PATH=$CUDA_HOME/bin:$PATH
-ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+RUN pip3 install peft --no-dependencies
 
-RUN apt-get update && \
-    apt-get install -y cuda-toolkit-12-1
+# Set the working directory in the container
+WORKDIR /app
 
-RUN which nvcc
-
-COPY requirements.txt /tmp/requirements.txt
-
-RUN pip install uv
-RUN uv venv
-RUN . .venv/bin/activate
-RUN uv pip install torch
-RUN uv pip install --upgrade numpy
-RUN uv pip install setuptools
-RUN uv pip install psutil
-RUN uv pip install -U flash-attn==2.5.9.post1 --no-build-isolation
-RUN uv pip install -r /tmp/requirements.txt
-
-ENV PATH="/.venv/bin:$PATH"
-
+# Command to run when starting the container
 CMD ["bash"]
